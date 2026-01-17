@@ -31,11 +31,18 @@ class PGVectorProvider(vectordbInterface):
 
     async def connect(self):
         async with self.db_client() as session :
-            async with session.begin():
-                await session.execute(sql_text(
+            
+            try:
+                result = await session.execute(sql_text(
                     "CREATE EXTENSION IF NOT EXISTS vector"
                 ))
-            await session.commit()
+                extension_exitsts = result.scalar_one_or_none()
+                if not extension_exitsts:
+                    await session.execute(sql_text('CREATE EXTENSION vector'))
+                    await session.commit()
+            except Exception as e:
+                self.logger.error(f"Error while creating vector extension: {e}")
+                await session.rollback()
 
 
 
