@@ -17,6 +17,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_MAIN_HOST_IP }}
+          port: 216
           username: github_user
           key: ${{ secrets.SSH_MAIN_PRIVATE_KEY }}
           script: |
