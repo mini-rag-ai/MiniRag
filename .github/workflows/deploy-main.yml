@@ -15,7 +15,7 @@ jobs:
 
       - name: Deploy Locally
         run: |
-          cd /home/github_user/workspace/mini-rag
+          cd /home/github_user/workspace/MiniRag
           git checkout develop
           git pull
           sudo systemctl restart minirag.service
