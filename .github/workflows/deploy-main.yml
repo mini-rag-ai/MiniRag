@@ -1,3 +1,5 @@
+# Deploy Main Branch to Server — with SSH debug and improved service check
+# Required secrets: SSH_MAIN_HOST_IP, SSH_MAIN_PRIVATE_KEY
 name: Deploy Main Branch to Server
 
 on:
@@ -13,32 +15,50 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Debug SSH connectivity (collect network info from runner)
+        run: |
+          set -euo pipefail
+          sudo apt-get update -y
+          sudo apt-get install -y openssh-client dnsutils netcat curl || true
+          echo "==== Resolve host ===="
+          nslookup "${{ secrets.SSH_MAIN_HOST_IP }}" || true
+          echo "==== Try TCP connect to port 22 ===="
+          nc -vz -w 5 "${{ secrets.SSH_MAIN_HOST_IP }}" 22 || true
+          echo "==== Attempt verbose SSH (non-interactive, won't fail the job) ===="
+          ssh -o ConnectTimeout=10 -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -vvv -p 22 github_user@"${{ secrets.SSH_MAIN_HOST_IP }}" 'echo SSH_OK' || true
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_MAIN_HOST_IP }}
-          
           username: github_user
+          port: 22
           key: ${{ secrets.SSH_MAIN_PRIVATE_KEY }}
+          timeout: 30s
           script: |
-            cd /home/github_user/workspace/mini-rag
-            git checkout develop
-            git pull
-            sudo systemctl restart minirag.service
-            echo "Waiting..."
-            sleep 20
-
+            set -euo pipefail
+            echo "Deploy: enter repo dir"
+            cd /home/github_user/workspace/mini-rag || { echo "Directory not found: /home/github_user/workspace/mini-rag"; exit 2; }
+            echo "Fetch & reset to origin/develop"
+            git fetch --all --prune
+            git checkout develop || git checkout -b develop origin/develop
+            git reset --hard origin/develop
+            git pull origin develop
+            echo "Restart service"
+            sudo systemctl restart minirag.service || { echo "systemctl restart failed"; sudo journalctl -u minirag.service -n 200 --no-pager || true; exit 3; }
+            echo "Waiting for service to respond on http://127.0.0.1:80 ..."
             for i in {1..6}; do
-              if ss -tuln | grep -q ':80'; then
-                echo "✅ Port 80 is now active."
+              if curl -sS --fail --max-time 5 http://127.0.0.1:80 >/dev/null 2>&1; then
+                echo "✅ Service is responding on port 80."
                 break
               else
-                echo "⏳ Port 80 not ready yet. Retrying in 5 seconds..."
+                echo "⏳ Service not ready yet. Retrying in 5 seconds... ($i/6)"
                 sleep 5
               fi
             done
 
-            if ! ss -tuln | grep -q ':80'; then
-              echo "❌ Service failed to start on port 80"
+            if ! curl -sS --fail --max-time 5 http://127.0.0.1:80 >/dev/null 2>&1; then
+              echo "❌ Service failed to respond on port 80 — showing recent logs:"
+              sudo journalctl -u minirag.service -n 200 --no-pager || true
               exit 1
             fi
