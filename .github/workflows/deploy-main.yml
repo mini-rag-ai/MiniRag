@@ -3,11 +3,11 @@ name: Deploy Develop Branch to Server
 on:
   push:
     branches:
-      - develop
+      - main
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -20,8 +20,8 @@ jobs:
           username: github_user
           key: ${{ secrets.SSH_DEVELOP_PRIVATE_KEY }}
           script: |
-            cd /home/github_user/workspace/mini-rag
-            git checkout develop
+            cd /home/github_user/workspace/MiniRag
+            git checkout main
             git pull
             sudo systemctl restart minirag.service
             echo "Waiting..."
