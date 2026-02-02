@@ -28,17 +28,17 @@ jobs:
             sleep 20
 
             for i in {1..6}; do
-              if ss -tuln | grep -q ':88'; then
+              if ss -tuln | grep -q ':8000'; then
                 echo "✅ Port 80 is now active."
                 break
               else
-                echo "⏳ Port 88 not ready yet. Retrying in 5 seconds..."
+                echo "⏳ Port 8000 not ready yet. Retrying in 5 seconds..."
                 sleep 5
               fi
             done
 
-            if ! ss -tuln | grep -q ':88'; then
-              echo "❌ Service failed to start on port 88"
+            if ! ss -tuln | grep -q ':8000'; then
+              echo "❌ Service failed to start on port 8000"
               exit 1
             fi
 
