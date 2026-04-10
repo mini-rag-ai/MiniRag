@@ -16,7 +16,7 @@ setup_metrics(app)
 async def startup_span():
     settings = get_settings()
 
-    postgrea_conn = f'postgresql+asyncpg://{settings.POSTGERS_USERNAME}:{settings.POSTGERS_PASSWORD}@{settings.POSTGERS_HOST}:{settings.POSTGERS_PORT}/{settings.POSTGERS_MAIN_DATABASE}'
+    postgrea_conn = f'postgresql+asyncpg://{settings.POSTGRES_USERNAME}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_MAIN_DATABASE}'
     app.db_engine = create_async_engine(postgrea_conn)
 
     app.db_client = sessionmaker(

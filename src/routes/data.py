@@ -14,6 +14,7 @@ from models.AssetModel import AssetModel
 from models.db_schemes import DataChunk, Asset
 from models.enums.AssetTypeEnum import AssetTypeEnum
 from routes.schemas.data import ProcessRequest
+from tasks.file_processing import process_project_files
 
 logger = logging.getLogger('uvicorn.error')
 
@@ -97,6 +98,26 @@ async def process_endpoint(request: Request, project_id: int, process_request: P
     overlap_size = process_request.overlap_size
     do_reset = process_request.do_reset
 
+    task = process_project_files.delay(
+        project_id=project_id,
+        chunk_size=chunk_size,
+        overlap_size=overlap_size,
+        do_reset=do_reset,
+        file_id=process_request.file_id
+    )
+
+
+
+    return JSONResponse(
+        content={
+            "signal": ResponseSignal.PROCESSING_SUCCESS.value,
+            "task_id": task.id
+        }
+    )
+
+
+
+
     project_model = await ProjectModel.create_instance(
         db_client=request.app.db_client
     )
@@ -144,7 +165,7 @@ async def process_endpoint(request: Request, project_id: int, process_request: P
         )
 
         project_files_ids = {
-            record. asset_id: record.asset_name
+            record.asset_id: record.asset_name
             for record in project_files
         }
 
@@ -166,9 +187,10 @@ async def process_endpoint(request: Request, project_id: int, process_request: P
                     )
 
     if do_reset == 1:
-        # delete associated vector collection
+        # delete associated vectors collection
         collection_name = nlp_controller.create_collection_name(project_id=project.project_id)
-        _= await request.app.vectordb_client.delete_collection(collection_name=collection_name)
+        _ = await request.app.vectordb_client.delete_collection(collection_name=collection_name)
+
         # delete associated chunks
         _ = await chunk_model.delete_chunks_by_project_id(
             project_id=project.project_id
@@ -218,3 +240,5 @@ async def process_endpoint(request: Request, project_id: int, process_request: P
             "processed_files": no_files
         }
     )
+
+    

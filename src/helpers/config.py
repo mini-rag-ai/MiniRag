@@ -8,11 +8,11 @@ class Settings(BaseSettings):
     FILE_MAX_SIZE: int
     FILE_DEFAULT_CHUNK_SIZE: int
 
-    POSTGERS_USERNAME: str
-    POSTGERS_PASSWORD: str
-    POSTGERS_HOST: str
-    POSTGERS_PORT: int
-    POSTGERS_MAIN_DATABASE: str
+    POSTGRES_USERNAME: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_HOST: str
+    POSTGRES_PORT: int
+    POSTGRES_MAIN_DATABASE: str
 
     GENERATION_BACKEND: str
     EMBEDDING_BACKEND: str
@@ -38,7 +38,13 @@ class Settings(BaseSettings):
 
     PRIMARY_LANG : str
     DEFAULT_LANG : str
-
+    #celery Configuration
+    CELERY_BROKER_URL: str = None
+    CELERY_RESULT_BACKEND : str = None
+    CELERY_TASK_SERIALIZER :str = "json"
+    CELERY_TASK_TIME_LIMIT : int = 600
+    CELERY_TASK_ACKS_LATE : bool = True
+    CELERY_WORKER_CONCURRENCY : int = 2
 
 
 
