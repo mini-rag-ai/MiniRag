@@ -34,14 +34,14 @@ class PGVectorProvider(vectordbInterface):
             
             try:
                 result = await session.execute(sql_text(
-                    "CREATE EXTENSION IF NOT EXISTS vector"
+                    "SELECT 1 FROM pg_extension WHERE extname = 'vector'"
                 ))
                 extension_exitsts = result.scalar_one_or_none()
                 if not extension_exitsts:
                     await session.execute(sql_text('CREATE EXTENSION vector'))
                     await session.commit()
             except Exception as e:
-                self.logger.error(f"Error while creating vector extension: {e}")
+                self.logger.error(f"Error while creating vector extension: {str(e)}")
                 await session.rollback()
            
 
