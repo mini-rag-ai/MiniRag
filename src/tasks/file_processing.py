@@ -28,7 +28,7 @@ from routes.schemas.data import ProcessRequest
 def process_project_files(self,project_id: int,file_id:int,
                           chunk_size:int,overlap_size:int,do_reset:int):
     
-    asyncio.run(
+    return asyncio.run(
         _process_project_files(self, project_id,file_id,chunk_size,
                                overlap_size,do_reset)
     )
@@ -168,7 +168,7 @@ async def _process_project_files(task_instance,project_id:int,
             task_instance.update_state(
                     state='SUCCESS',
                     meta={
-                        "signal": ResponseSignal.NO_FILES_ERROR.value,
+                        "signal": ResponseSignal.PROCESSING_SUCCESS.value,
                     }
                 )
 
