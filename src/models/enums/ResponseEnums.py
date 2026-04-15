@@ -20,4 +20,7 @@ class ResponseSignal(Enum):
     RAG_ANSWER_ERROR = "rag_answer_error"
     RAG_ANSWER_SUCCESS = "rag_answer_success"
     DATA_PUSH_TASK_READY = "data_push_task_ready"
+    PROCESSING_TASK_TRIGGERED = "processing_task_triggered"
+    PROCESS_AND_PUSH_TASK_TRIGGERED = "process_and_push_task_triggered"
+    INDEXING_TASK_TRIGGERED = "indexing_task_triggered"
     
